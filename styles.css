@@ -1,0 +1,146 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+:root {
+    --background-color: #ffffff;
+    --text-color: #000000;
+}
+
+[data-theme="dark"] {
+    --background-color: #1c1c1e;
+    --text-color: #ffffff;
+}
+
+.container {
+    width: 90%;
+    max-width: 600px;
+    background: var(--background-color);
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    position: relative;
+}
+
+h1 {
+    text-align: center;
+}
+
+.upload-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.upload-section input {
+    display: none;
+}
+
+.upload-section p {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    cursor: pointer;
+}
+
+.carousel-section {
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.img-container {
+    position: relative;
+    display: inline-block;
+}
+
+.carousel-section img {
+    max-height: 200px;
+    cursor: move;
+}
+
+.copy-section textarea,
+.copy-section input {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.remove-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.remove-icon:hover {
+    background-color: rgba(255, 0, 0, 0.7);
+}
+
+.remove-icon::before, .remove-icon::after {
+    content: ' ';
+    position: absolute;
+    width: 2px;
+    height: 12px;
+    background-color: #333;
+}
+
+.remove-icon::before {
+    transform: rotate(45deg);
+}
+
+.remove-icon::after {
+    transform: rotate(-45deg);
+}
+.dock {
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 35px;
+    padding: 10px 15px; /* Added a tiny bit of padding all around */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.export-btn {
+    background-color: rgba(0, 0, 0, 0.2); /* Glassmorphic effect */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    border-radius: 10px; /* Rounded corners */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.export-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 99, 71, 0.3) 0%, rgba(255, 99, 71, 0.3) 50%, rgba(255, 99, 71, 0.3) 100%); /* Burnt orange gradient effect on hover */
+}

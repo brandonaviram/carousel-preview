@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carousel Preview</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Carousel Preview</h1>
+        <div class="upload-section">
+            <label for="imageUpload" class="upload-label">
+                <p>Drag & drop images here, or click to select files</p>
+            </label>
+            <input type="file" id="imageUpload" multiple accept="image/*" style="display: none;">
+        </div>
+        <div class="carousel-section" id="carouselSection"></div>
+        <div class="copy-section">
+            <textarea id="scratchCopy" placeholder="Enter your caption here..."></textarea>
+            <input type="text" id="tags" placeholder="Enter tags here...">
+        </div>
+        <div class="dock" style="display: flex; justify-content: center; align-items: center;">
+            <span>Export:</span>
+            <button id="exportFilenameList" class="export-btn">📄 Filenames</button>
+            <button id="exportMoodboard" class="export-btn">🖼️ Moodboard</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
