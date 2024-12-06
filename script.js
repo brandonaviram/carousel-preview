@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Get DOM elements
     const imageUpload = document.getElementById('imageUpload');
     const carouselSection = document.getElementById('carouselSection');
     const exportFilenameListBtn = document.getElementById('exportFilenameList');
@@ -6,18 +7,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportMetadataBtn = document.getElementById('exportMetadata');
     const uploadLabel = document.querySelector('.upload-label');
     
-    // Event Listeners
-    imageUpload.addEventListener('change', handleImageUpload);
+    // Setup event listeners only if elements exist
+    if (imageUpload) {
+        imageUpload.addEventListener('change', handleImageUpload);
+    }
+
     document.addEventListener('dragover', handleDragOver);
     document.addEventListener('drop', handleDrop);
-    exportFilenameListBtn.addEventListener('click', exportFilenameList);
-    exportMoodboardBtn.addEventListener('click', exportMoodboard);
-    exportMetadataBtn.addEventListener('click', exportMetadata);
+
+    if (exportFilenameListBtn) {
+        exportFilenameListBtn.addEventListener('click', exportFilenameList);
+    }
+
+    if (exportMoodboardBtn) {
+        exportMoodboardBtn.addEventListener('click', exportMoodboard);
+    }
+
+    if (exportMetadataBtn) {
+        exportMetadataBtn.addEventListener('click', exportMetadata);
+    }
     
-    // Enhance drag and drop visual feedback
-    uploadLabel.addEventListener('dragenter', () => uploadLabel.style.borderColor = '#666');
-    uploadLabel.addEventListener('dragleave', () => uploadLabel.style.borderColor = '#ccc');
-    
+    // Add drag and drop visual feedback if upload label exists
+    if (uploadLabel) {
+        uploadLabel.addEventListener('dragenter', () => uploadLabel.style.borderColor = '#666');
+        uploadLabel.addEventListener('dragleave', () => uploadLabel.style.borderColor = '#ccc');
+    }
+
     // Dark mode detection and handling
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.setAttribute('data-theme', 'dark');
