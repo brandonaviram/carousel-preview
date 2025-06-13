@@ -14,7 +14,7 @@ The preview area displays slides in a four-column contact-sheet grid so you can 
 - **Caption & Tags** – Compose copy and tags alongside the carousel.
 - **Exports**
   - **Filename list** – Download a text file of image filenames in order.
-  - **Moodboard** – Create a PDF contact sheet (4×5 grid) with filenames below each image. Images are cropped to Instagram's 1080×1350 resolution using [jsPDF](https://github.com/parallax/jsPDF).
+  - **Moodboard** – Create a landscape PDF contact sheet (1920×1080) with a 4×3 grid. Images are cropped to Instagram's 1080×1350 resolution using [jsPDF](https://github.com/parallax/jsPDF).
   - **Metadata** – Export captions, tags, and image details.
 - **Safe Zone Overlay** – Optional mask to visualize Instagram's 4:5 safe area.
 - **Light/Dark Toggle** – Switch the interface theme at any time.
