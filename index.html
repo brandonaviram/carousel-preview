@@ -9,21 +9,34 @@
 <body>
     <div class="container">
         <h1>Carousel Preview</h1>
+        <div class="toolbar">
+            <label class="toggle">
+                <input type="checkbox" id="themeToggle">
+                <span>Dark mode</span>
+            </label>
+            <label class="toggle">
+                <input type="checkbox" id="safeZoneToggle">
+                <span>Show Instagram Safe Zone</span>
+            </label>
+        </div>
         <div class="upload-section">
             <label for="imageUpload" class="upload-label">
-                <p>Drag & drop images here, or click to select files</p>
+                <span class="upload-icon">📷</span>
+                <p>Drop your carousel here – up to 20 images</p>
             </label>
             <input type="file" id="imageUpload" multiple accept="image/*" style="display: none;">
         </div>
         <div class="carousel-section" id="carouselSection"></div>
         <div class="copy-section">
-            <textarea id="scratchCopy" placeholder="Enter your caption here..."></textarea>
-            <input type="text" id="tags" placeholder="Enter tags here...">
+            <label for="scratchCopy">Caption</label>
+            <textarea id="scratchCopy" placeholder="Type caption..."></textarea>
+            <label for="tags">Tags</label>
+            <input type="text" id="tags" placeholder="tag1 tag2">
         </div>
-        <div class="dock" style="display: flex; justify-content: center; align-items: center;">
-            <span>Export:</span>
-            <button id="exportFilenameList" class="export-btn">📄 Filenames</button>
-            <button id="exportMoodboard" class="export-btn">🖼️ Moodboard</button>
+        <div class="dock">
+            <button id="exportFilenameList" class="export-btn" title="Download ordered filenames">📄 Filenames</button>
+            <button id="exportMoodboard" class="export-btn" title="Create moodboard PDF">🖼️ Moodboard</button>
+            <button id="exportMetadata" class="export-btn" title="Export caption, tags and image list">📝 Metadata</button>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
