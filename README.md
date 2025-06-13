@@ -2,15 +2,18 @@
 
 Carousel Preview is a lightweight web tool for quickly arranging and previewing Instagram carousel posts. Upload images, drag to reorder, and export filenames or a moodboard PDF. The project was created by Aviram, a software production agency.
 
+The preview area displays slides in a four-column contact-sheet grid so you can review the whole sequence at once.
+
 ## Features
 
 - **Drag & Drop Uploads** – Add images by selecting files or dropping them into the browser.
 - **Paste Support** – Paste images directly from the clipboard.
 - **Reordering** – Use drag and drop (via [Sortable](https://github.com/SortableJS/Sortable)) to change the order of slides.
+- **Contact Sheet View** – Slides are shown four across for an at-a-glance overview.
 - **Caption & Tags** – Compose copy and tags alongside the carousel.
 - **Exports**
   - **Filename list** – Download a text file of image filenames in order.
-  - **Moodboard** – Create a PDF preview of your carousel using [jsPDF](https://github.com/parallax/jsPDF).
+  - **Moodboard** – Create a PDF contact sheet (4×5 grid) using [jsPDF](https://github.com/parallax/jsPDF).
   - **Metadata** – Export captions, tags, and image details.
 - **Safe Zone Overlay** – Optional mask to visualize Instagram's 4:5 safe area.
 - **Light/Dark Toggle** – Switch the interface theme at any time.

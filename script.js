@@ -211,30 +211,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1920, 1080] });
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'px', format: [2160, 2700] });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         
         // Page margins
         const margin = 20;
-        const availableWidth = pageWidth - (2 * margin);
-        const availableHeight = pageHeight - (2 * margin);
-
         // Grid configuration
-        const columns = 2;
-        const rows = 3;
+        const columns = 4;
+        const rows = 5;
         const spacing = 10;
 
-        // Calculate image dimensions
-        const imageWidth = (availableWidth - (spacing * (columns - 1))) / columns;
-        const imageHeight = (imageWidth * 5) / 4; // 4:5 aspect ratio
+        const imageWidth = 200;
+        const imageHeight = 250; // 4:5 aspect ratio
+
+        const totalWidth = (columns * imageWidth) + ((columns - 1) * spacing);
+        const startX = (pageWidth - totalWidth) / 2;
 
         // Get additional content
         const caption = document.getElementById('scratchCopy').value;
         const tags = document.getElementById('tags').value;
 
         let currentPage = 1;
-        let x = margin;
         let y = margin;
 
         // Add caption and tags to first page if present
@@ -251,6 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             y += 10; // Extra spacing after text
         }
+
+        const startYAdjusted = y;
+        let x = startX;
 
         for (let i = 0; i < imgContainers.length; i++) {
             const img = imgContainers[i].querySelector('img');
@@ -314,15 +315,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Move to next position
                 if ((i + 1) % columns === 0) {
-                    x = margin;
+                    x = startX;
                     y += imageHeight + spacing;
-                    
+
                     // Check if we need a new page
                     if (y + imageHeight > pageHeight - margin) {
                         if (i < imgContainers.length - 1) {
                             doc.addPage();
                             currentPage++;
-                            y = margin;
+                            y = startYAdjusted;
                         }
                     }
                 } else {
@@ -344,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1920, 1080] });
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'px', format: [2160, 2700] });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 20;

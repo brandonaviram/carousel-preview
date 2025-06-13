@@ -72,30 +72,19 @@ h1 {
 }
 
 .carousel-section {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 20px;
     padding: 20px;
     margin-bottom: 30px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    min-height: 400px;
-    align-items: center;
-}
-
-.carousel-section::-webkit-scrollbar {
-    display: none;
+    justify-items: center;
 }
 
 .img-container {
     position: relative;
-    flex: 0 0 auto;
-    width: 320px;
-    height: 400px;
-    scroll-snap-align: start;
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 4 / 5;
     background-color: #f0f0f0;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -143,6 +132,13 @@ h1 {
     border-radius: 5px;
     background-color: var(--background-color);
     color: var(--text-color);
+}
+
+.copy-section label {
+    display: block;
+    font-weight: 600;
+    margin: 15px 0 5px;
+    font-size: 16px;
 }
 
 .remove-icon {
