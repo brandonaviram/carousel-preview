@@ -10,10 +10,11 @@ The preview area displays slides in a four-column contact-sheet grid so you can 
 - **Paste Support** – Paste images directly from the clipboard.
 - **Reordering** – Use drag and drop (via [Sortable](https://github.com/SortableJS/Sortable)) to change the order of slides.
 - **Contact Sheet View** – Slides are shown four across for an at-a-glance overview.
+- **20 Image Limit** – Upload up to twenty images per project.
 - **Caption & Tags** – Compose copy and tags alongside the carousel.
 - **Exports**
   - **Filename list** – Download a text file of image filenames in order.
-  - **Moodboard** – Create a PDF contact sheet (4×5 grid) using [jsPDF](https://github.com/parallax/jsPDF).
+  - **Moodboard** – Create a PDF contact sheet (4×5 grid) with filenames below each image. Images are cropped to Instagram's 1080×1350 resolution using [jsPDF](https://github.com/parallax/jsPDF).
   - **Metadata** – Export captions, tags, and image details.
 - **Safe Zone Overlay** – Optional mask to visualize Instagram's 4:5 safe area.
 - **Light/Dark Toggle** – Switch the interface theme at any time.

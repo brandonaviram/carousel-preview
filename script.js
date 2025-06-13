@@ -179,13 +179,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addImages(files) {
+        const limit = 20;
+        let currentCount = document.querySelectorAll('.img-container').length;
         for (let i = 0; i < files.length; i++) {
+            if (currentCount >= limit) {
+                alert('Maximum of 20 images allowed');
+                break;
+            }
             const file = files[i];
             const reader = new FileReader();
             reader.onload = function(e) {
                 const container = createImageContainer(e.target.result, file.name);
                 carouselSection.appendChild(container);
                 updateImageCounters();
+                currentCount++;
                 if (safeZoneToggle && safeZoneToggle.checked) {
                     container.querySelector('.safe-mask').style.display = 'block';
                 }
@@ -214,6 +221,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 <rect x="0" y="135" width="1080" height="1080" fill="transparent"/>
             </svg>`;
         return wrapper;
+    }
+
+    function cropTo4x5(img) {
+        const targetW = 1080;
+        const targetH = 1350;
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+
+        const srcW = img.naturalWidth;
+        const srcH = img.naturalHeight;
+        const srcAspect = srcW / srcH;
+        const targetAspect = targetW / targetH;
+        let sx = 0, sy = 0, sw = srcW, sh = srcH;
+
+        if (srcAspect > targetAspect) {
+            sw = srcH * targetAspect;
+            sx = (srcW - sw) / 2;
+        } else {
+            sh = srcW / targetAspect;
+            sy = (srcH - sh) / 2;
+        }
+
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+        return canvas.toDataURL('image/jpeg', 0.85);
     }
 
     function exportFilenameList() {
@@ -251,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const imageWidth = 200;
         const imageHeight = 250; // 4:5 aspect ratio
+        const textGap = 14; // space for filename text
 
         const totalWidth = (columns * imageWidth) + ((columns - 1) * spacing);
         const startX = (pageWidth - totalWidth) / 2;
@@ -265,14 +299,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add caption and tags to first page if present
         if (caption || tags) {
             if (caption) {
-                doc.setFontSize(12);
+                doc.setFontSize(16);
                 doc.text(caption, margin, y);
-                y += 10;
+                y += 18;
             }
             if (tags) {
-                doc.setFontSize(10);
+                doc.setFontSize(12);
                 doc.text(tags, margin, y);
-                y += 10;
+                y += 14;
             }
             y += 10; // Extra spacing after text
         }
@@ -282,71 +316,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < imgContainers.length; i++) {
             const img = imgContainers[i].querySelector('img');
-            
-            // Create a temporary canvas to handle image resizing
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Calculate proper dimensions while maintaining aspect ratio
-            let finalWidth = imageWidth;
-            let finalHeight = imageHeight;
-            const imgAspect = img.naturalWidth / img.naturalHeight;
-            const targetAspect = 4/5; // Target aspect ratio
-
-            if (imgAspect > targetAspect) {
-                // Wider image
-                finalHeight = finalWidth / imgAspect;
-            } else {
-                // Taller image
-                finalWidth = finalHeight * imgAspect;
-            }
-
-            // Center the image in its cell
-            const xOffset = (imageWidth - finalWidth) / 2;
-            const yOffset = (imageHeight - finalHeight) / 2;
+            const cropped = cropTo4x5(img);
 
             try {
-                // Add the image
-                doc.addImage(
-                    img.src,
-                    'JPEG',
-                    x + xOffset,
-                    y + yOffset,
-                    finalWidth,
-                    finalHeight
-                );
+                doc.addImage(cropped, 'JPEG', x, y, imageWidth, imageHeight);
 
-                // Add the number
+                // Add number badge inside the image
                 doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0); // Black text
-                
-                // Draw number background
+                doc.setTextColor(0, 0, 0);
                 const numberText = (i + 1).toString();
                 const textWidth = doc.getTextWidth(numberText);
                 const padding = 3;
-                doc.setFillColor(255, 255, 255); // White background
+                doc.setFillColor(255, 255, 255);
                 doc.rect(
-                    x + xOffset, 
-                    y + yOffset + finalHeight + 2, // 2mm gap below image
-                    textWidth + (padding * 2),
-                    6,
+                    x + 4,
+                    y + imageHeight - 14,
+                    textWidth + padding * 2,
+                    10,
                     'F'
                 );
-                
-                // Draw number text
+                doc.text(numberText, x + 4 + padding, y + imageHeight - 6);
+
+                // Add filename below the image
+                doc.setFontSize(8);
+                const filename = imgContainers[i].dataset.filename || '';
                 doc.text(
-                    numberText,
-                    x + xOffset + padding,
-                    y + yOffset + finalHeight + 6 // Position text within background
+                    filename,
+                    x + imageWidth / 2,
+                    y + imageHeight + 10,
+                    { align: 'center' }
                 );
 
                 // Move to next position
                 if ((i + 1) % columns === 0) {
                     x = startX;
-                    y += imageHeight + spacing;
+                    y += imageHeight + spacing + textGap;
 
                     // Check if we need a new page
-                    if (y + imageHeight > pageHeight - margin) {
+                    if (y + imageHeight + textGap > pageHeight - margin) {
                         if (i < imgContainers.length - 1) {
                             doc.addPage();
                             currentPage++;
