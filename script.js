@@ -99,68 +99,95 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function createImageContainer(src, filename) {
+        const imgContainer = document.createElement('div');
+        imgContainer.classList.add('img-container');
+
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = filename;
+        img.classList.add('carousel-image');
+        imgContainer.appendChild(img);
+
+        const mask = createSafeMask();
+        imgContainer.appendChild(mask);
+
+        const actions = document.createElement('div');
+        actions.classList.add('action-icons');
+
+        // Zoom preview
+        const zoomBtn = document.createElement('button');
+        zoomBtn.textContent = '🔍';
+        zoomBtn.title = 'Preview image';
+        zoomBtn.addEventListener('click', () => {
+            const win = window.open('');
+            if (win) {
+                win.document.write(`<img src="${img.src}" style="width:100%">`);
+            }
+        });
+        actions.appendChild(zoomBtn);
+
+        // Replace image
+        const replaceBtn = document.createElement('button');
+        replaceBtn.textContent = '♻️';
+        replaceBtn.title = 'Replace image';
+        replaceBtn.addEventListener('click', () => {
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'image/*';
+            inp.addEventListener('change', ev => {
+                const f = ev.target.files[0];
+                if (f) {
+                    const fr = new FileReader();
+                    fr.onload = ev2 => {
+                        img.src = ev2.target.result;
+                        img.alt = f.name;
+                        imgContainer.dataset.filename = f.name;
+                        updateImageCounters();
+                    };
+                    fr.readAsDataURL(f);
+                }
+            });
+            inp.click();
+        });
+        actions.appendChild(replaceBtn);
+
+        // Duplicate slide
+        const duplicateBtn = document.createElement('button');
+        duplicateBtn.textContent = '📄';
+        duplicateBtn.title = 'Duplicate slide';
+        duplicateBtn.addEventListener('click', () => {
+            const clone = createImageContainer(img.src, imgContainer.dataset.filename);
+            carouselSection.insertBefore(clone, imgContainer.nextSibling);
+            updateImageCounters();
+        });
+        actions.appendChild(duplicateBtn);
+
+        imgContainer.appendChild(actions);
+
+        const removeIcon = document.createElement('button');
+        removeIcon.classList.add('remove-icon');
+        removeIcon.title = 'Delete';
+        removeIcon.addEventListener('click', () => {
+            imgContainer.remove();
+            updateImageCounters();
+        });
+        imgContainer.appendChild(removeIcon);
+
+        imgContainer.dataset.filename = filename;
+        return imgContainer;
+    }
+
     function addImages(files) {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const reader = new FileReader();
             reader.onload = function(e) {
-                const imgContainer = document.createElement('div');
-                imgContainer.classList.add('img-container');
-
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.alt = file.name;
-                img.classList.add('carousel-image');
-                imgContainer.appendChild(img);
-
-                const mask = createSafeMask();
-                imgContainer.appendChild(mask);
-
-                const actions = document.createElement('div');
-                actions.classList.add('action-icons');
-
-
-                const replaceBtn = document.createElement('button');
-                replaceBtn.textContent = '♻️';
-                replaceBtn.title = 'Replace image';
-                replaceBtn.addEventListener('click', () => {
-                    const inp = document.createElement('input');
-                    inp.type = 'file';
-                    inp.accept = 'image/*';
-                    inp.addEventListener('change', ev => {
-                        const f = ev.target.files[0];
-                        if (f) {
-                            const fr = new FileReader();
-                            fr.onload = ev2 => {
-                                img.src = ev2.target.result;
-                                img.alt = f.name;
-                                imgContainer.dataset.filename = f.name;
-                                updateImageCounters();
-                            };
-                            fr.readAsDataURL(f);
-                        }
-                    });
-                    inp.click();
-                });
-                actions.appendChild(replaceBtn);
-
-
-                const removeIcon = document.createElement('button');
-                removeIcon.classList.add('remove-icon');
-                removeIcon.title = 'Delete';
-                removeIcon.addEventListener('click', () => {
-                    imgContainer.remove();
-                    updateImageCounters();
-                });
-
-                imgContainer.appendChild(actions);
-                imgContainer.appendChild(removeIcon);
-
-                imgContainer.dataset.filename = file.name;
-                carouselSection.appendChild(imgContainer);
+                const container = createImageContainer(e.target.result, file.name);
+                carouselSection.appendChild(container);
                 updateImageCounters();
                 if (safeZoneToggle && safeZoneToggle.checked) {
-                    mask.style.display = 'block';
+                    container.querySelector('.safe-mask').style.display = 'block';
                 }
             };
             reader.readAsDataURL(file);

@@ -17,7 +17,7 @@ The preview area displays slides in a four-column contact-sheet grid so you can 
   - **Metadata** – Export captions, tags, and image details.
 - **Safe Zone Overlay** – Optional mask to visualize Instagram's 4:5 safe area.
 - **Light/Dark Toggle** – Switch the interface theme at any time.
-- **Per-image Actions** – Replace or delete each slide.
+- **Per-image Actions** – Quickly preview, replace, duplicate, or delete each slide.
 - **Dark Mode** – Adapts to system dark mode preferences.
 
 ## Development
