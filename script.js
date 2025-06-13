@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportMoodboardBtn = document.getElementById('exportMoodboard');
     const exportMetadataBtn = document.getElementById('exportMetadata');
     const uploadLabel = document.querySelector('.upload-label');
+    const themeToggle = document.getElementById('themeToggle');
+    const safeZoneToggle = document.getElementById('safeZoneToggle');
     
     // Setup event listeners only if elements exist
     if (imageUpload) {
@@ -26,6 +28,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (exportMetadataBtn) {
         exportMetadataBtn.addEventListener('click', exportMetadata);
     }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('change', () => {
+            document.documentElement.setAttribute('data-theme', themeToggle.checked ? 'dark' : 'light');
+        });
+    }
+
+    if (safeZoneToggle) {
+        safeZoneToggle.addEventListener('change', () => {
+            document.querySelectorAll('.safe-mask').forEach(mask => {
+                mask.style.display = safeZoneToggle.checked ? 'block' : 'none';
+            });
+        });
+    }
+
+    document.addEventListener('paste', handlePasteImages);
     
     // Add drag and drop visual feedback if upload label exists
     if (uploadLabel) {
@@ -36,10 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dark mode detection and handling
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.setAttribute('data-theme', 'dark');
+        if (themeToggle) themeToggle.checked = true;
     }
-    
+
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
         document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        if (themeToggle) themeToggle.checked = e.matches;
     });
 
     function handleImageUpload(event) {
@@ -56,6 +76,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const files = event.dataTransfer.files;
         addImages(files);
         uploadLabel.style.borderColor = '#ccc';
+    }
+
+    function handlePasteImages(event) {
+        const items = event.clipboardData.items;
+        const files = [];
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.type.startsWith('image/')) {
+                files.push(item.getAsFile());
+            }
+        }
+        if (files.length > 0) {
+            addImages(files);
+        }
     }
 
     function updateImageCounters() {
@@ -75,20 +109,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const img = document.createElement('img');
                 img.src = e.target.result;
+                img.alt = file.name;
                 img.classList.add('carousel-image');
                 imgContainer.appendChild(img);
 
+                const mask = createSafeMask();
+                imgContainer.appendChild(mask);
+
+                const actions = document.createElement('div');
+                actions.classList.add('action-icons');
+
+                const zoomBtn = document.createElement('button');
+                zoomBtn.textContent = '🔍';
+                zoomBtn.title = 'Preview';
+                zoomBtn.addEventListener('click', () => {
+                    window.open(img.src, '_blank');
+                });
+                actions.appendChild(zoomBtn);
+
+                const replaceBtn = document.createElement('button');
+                replaceBtn.textContent = '♻️';
+                replaceBtn.title = 'Replace image';
+                replaceBtn.addEventListener('click', () => {
+                    const inp = document.createElement('input');
+                    inp.type = 'file';
+                    inp.accept = 'image/*';
+                    inp.addEventListener('change', ev => {
+                        const f = ev.target.files[0];
+                        if (f) {
+                            const fr = new FileReader();
+                            fr.onload = ev2 => {
+                                img.src = ev2.target.result;
+                                img.alt = f.name;
+                                imgContainer.dataset.filename = f.name;
+                            };
+                            fr.readAsDataURL(f);
+                        }
+                    });
+                    inp.click();
+                });
+                actions.appendChild(replaceBtn);
+
+                const duplicateBtn = document.createElement('button');
+                duplicateBtn.textContent = '📄';
+                duplicateBtn.title = 'Duplicate slide';
+                duplicateBtn.addEventListener('click', () => {
+                    const cloneFile = new File([file], file.name, { type: file.type });
+                    addImages([cloneFile]);
+                });
+                actions.appendChild(duplicateBtn);
+
                 const removeIcon = document.createElement('button');
                 removeIcon.classList.add('remove-icon');
+                removeIcon.title = 'Delete';
                 removeIcon.addEventListener('click', () => {
                     imgContainer.remove();
-                    updateImageCounters(); // Update counters after removal
+                    updateImageCounters();
                 });
-                imgContainer.appendChild(removeIcon);
+                actions.appendChild(removeIcon);
+
+                imgContainer.appendChild(actions);
 
                 imgContainer.dataset.filename = file.name;
                 carouselSection.appendChild(imgContainer);
-                updateImageCounters(); // Update counters after adding
+                updateImageCounters();
+                if (safeZoneToggle && safeZoneToggle.checked) {
+                    mask.style.display = 'block';
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -102,6 +189,19 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Images reordered');
         }
     });
+
+    function createSafeMask() {
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('safe-mask');
+        wrapper.style.display = 'none';
+        wrapper.innerHTML = `
+            <svg viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="1080" height="1350" fill="rgba(0,0,0,0.3)"/>
+                <rect x="0" y="135" width="1080" height="1080" stroke="red" stroke-width="5" fill="none"/>
+                <rect x="0" y="135" width="1080" height="1080" fill="transparent"/>
+            </svg>`;
+        return wrapper;
+    }
 
     function exportFilenameList() {
         const imgContainers = document.querySelectorAll('.img-container');
@@ -260,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 20;
         let y = margin;
 
