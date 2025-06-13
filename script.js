@@ -271,7 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1920, 1080] });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         
@@ -279,7 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const margin = 20;
         // Grid configuration
         const columns = 4;
-        const rows = 3;
         const spacing = 10;
 
         const imageWidth = 200;
