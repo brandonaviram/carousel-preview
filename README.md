@@ -14,7 +14,7 @@ Carousel Preview is a lightweight web tool for quickly arranging and previewing 
   - **Metadata** – Export captions, tags, and image details.
 - **Safe Zone Overlay** – Optional mask to visualize Instagram's 4:5 safe area.
 - **Light/Dark Toggle** – Switch the interface theme at any time.
-- **Per-image Actions** – Zoom preview, replace, duplicate, or delete each slide.
+- **Per-image Actions** – Replace or delete each slide.
 - **Dark Mode** – Adapts to system dark mode preferences.
 
 ## Development

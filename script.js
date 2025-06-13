@@ -119,13 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const actions = document.createElement('div');
                 actions.classList.add('action-icons');
 
-                const zoomBtn = document.createElement('button');
-                zoomBtn.textContent = '🔍';
-                zoomBtn.title = 'Preview';
-                zoomBtn.addEventListener('click', () => {
-                    window.open(img.src, '_blank');
-                });
-                actions.appendChild(zoomBtn);
 
                 const replaceBtn = document.createElement('button');
                 replaceBtn.textContent = '♻️';
@@ -142,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 img.src = ev2.target.result;
                                 img.alt = f.name;
                                 imgContainer.dataset.filename = f.name;
+                                updateImageCounters();
                             };
                             fr.readAsDataURL(f);
                         }
@@ -150,14 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 actions.appendChild(replaceBtn);
 
-                const duplicateBtn = document.createElement('button');
-                duplicateBtn.textContent = '📄';
-                duplicateBtn.title = 'Duplicate slide';
-                duplicateBtn.addEventListener('click', () => {
-                    const cloneFile = new File([file], file.name, { type: file.type });
-                    addImages([cloneFile]);
-                });
-                actions.appendChild(duplicateBtn);
 
                 const removeIcon = document.createElement('button');
                 removeIcon.classList.add('remove-icon');
@@ -166,9 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     imgContainer.remove();
                     updateImageCounters();
                 });
-                actions.appendChild(removeIcon);
 
                 imgContainer.appendChild(actions);
+                imgContainer.appendChild(removeIcon);
 
                 imgContainer.dataset.filename = file.name;
                 carouselSection.appendChild(imgContainer);

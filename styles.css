@@ -12,7 +12,7 @@ body {
 
 .toolbar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 10px;
     margin-bottom: 10px;
 }
@@ -221,8 +221,8 @@ h1 {
 .dock {
     display: flex;
     justify-content: center;
-    position: absolute;
-    bottom: -50px;
+    position: fixed;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.5);
@@ -230,6 +230,7 @@ h1 {
     padding: 10px 15px; /* Added a tiny bit of padding all around */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
+    z-index: 1000;
 }
 
 .export-btn {
