@@ -23,7 +23,8 @@ const CONFIG = {
     },
     SORTABLE: {
         animation: 150
-    }
+    },
+    STORAGE_KEY: 'carouselPreviewState'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -74,6 +75,114 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(message);
     }
 
+    // ==================== Loading State Management ====================
+
+    function setButtonLoading(button, isLoading, loadingText = 'Exporting...') {
+        if (!button) return;
+
+        if (isLoading) {
+            button.dataset.originalText = button.textContent;
+            button.textContent = loadingText;
+            button.disabled = true;
+            button.style.opacity = '0.6';
+            button.style.cursor = 'wait';
+        } else {
+            button.textContent = button.dataset.originalText || button.textContent;
+            button.disabled = false;
+            button.style.opacity = '1';
+            button.style.cursor = 'pointer';
+        }
+    }
+
+    // ==================== Local Storage Persistence ====================
+
+    function saveState() {
+        try {
+            const containers = getImageContainers();
+            const images = Array.from(containers).map(c => ({
+                src: c.querySelector('img')?.src || '',
+                filename: c.dataset.filename || ''
+            }));
+
+            const state = {
+                images,
+                caption: DOM.scratchCopy?.value || '',
+                tags: DOM.tags?.value || '',
+                darkMode: DOM.themeToggle?.checked || false,
+                safeZone: DOM.safeZoneToggle?.checked || false
+            };
+
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            console.warn('Could not save state:', e);
+        }
+    }
+
+    function restoreState() {
+        try {
+            const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+            if (!saved) return;
+
+            const state = JSON.parse(saved);
+
+            // Restore images
+            if (state.images?.length > 0) {
+                state.images.forEach(img => {
+                    if (img.src && img.filename) {
+                        const container = createImageContainer(img.src, img.filename);
+                        DOM.carouselSection.appendChild(container);
+                    }
+                });
+                updateImageCounters();
+            }
+
+            // Restore text fields
+            if (DOM.scratchCopy && state.caption) {
+                DOM.scratchCopy.value = state.caption;
+            }
+            if (DOM.tags && state.tags) {
+                DOM.tags.value = state.tags;
+            }
+
+            // Restore toggles
+            if (DOM.themeToggle && state.darkMode) {
+                DOM.themeToggle.checked = true;
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            if (DOM.safeZoneToggle && state.safeZone) {
+                DOM.safeZoneToggle.checked = true;
+                document.querySelectorAll('.safe-mask').forEach(mask => {
+                    mask.style.display = 'block';
+                });
+            }
+        } catch (e) {
+            console.warn('Could not restore state:', e);
+        }
+    }
+
+    function clearSavedState() {
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+    }
+
+    // Auto-save on changes
+    function setupAutoSave() {
+        // Save when text fields change
+        DOM.scratchCopy?.addEventListener('input', debounce(saveState, 500));
+        DOM.tags?.addEventListener('input', debounce(saveState, 500));
+
+        // Save when toggles change
+        DOM.themeToggle?.addEventListener('change', saveState);
+        DOM.safeZoneToggle?.addEventListener('change', saveState);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
     // ==================== Event Handlers ====================
 
     function handleImageUpload(event) {
@@ -105,6 +214,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ==================== Keyboard Shortcuts ====================
+
+    function handleKeyboardShortcuts(event) {
+        // Cmd/Ctrl + E: Export moodboard
+        if ((event.metaKey || event.ctrlKey) && event.key === 'e') {
+            event.preventDefault();
+            exportMoodboard();
+            return;
+        }
+
+        // Cmd/Ctrl + Shift + E: Export metadata
+        if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'E') {
+            event.preventDefault();
+            exportMetadata();
+            return;
+        }
+
+        // Cmd/Ctrl + S: Save filename list
+        if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+            event.preventDefault();
+            exportFilenameList();
+            return;
+        }
+
+        // Delete/Backspace: Delete selected image (if focused)
+        if (event.key === 'Delete' || event.key === 'Backspace') {
+            const focused = document.activeElement;
+            if (focused?.closest('.img-container')) {
+                event.preventDefault();
+                focused.closest('.img-container').remove();
+                updateImageCounters();
+                saveState();
+            }
+        }
+
+        // Escape: Clear all images (with confirmation)
+        if (event.key === 'Escape') {
+            const containers = getImageContainers();
+            if (containers.length > 0 && confirm('Clear all images?')) {
+                containers.forEach(c => c.remove());
+                updateImageCounters();
+                saveState();
+            }
+        }
+    }
+
     // ==================== Image Management ====================
 
     function updateImageCounters() {
@@ -116,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function createImageContainer(src, filename) {
         const imgContainer = document.createElement('div');
         imgContainer.classList.add('img-container');
+        imgContainer.tabIndex = 0; // Make focusable for keyboard shortcuts
 
         // Main image
         const img = document.createElement('img');
@@ -137,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         removeIcon.addEventListener('click', () => {
             imgContainer.remove();
             updateImageCounters();
+            saveState();
         });
         imgContainer.appendChild(removeIcon);
 
@@ -177,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         img.alt = file.name;
                         container.dataset.filename = file.name;
                         updateImageCounters();
+                        saveState();
                     };
                     reader.readAsDataURL(file);
                 }
@@ -193,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const clone = createImageContainer(img.src, container.dataset.filename);
             DOM.carouselSection.insertBefore(clone, container.nextSibling);
             updateImageCounters();
+            saveState();
         });
         actions.appendChild(duplicateBtn);
 
@@ -219,6 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (DOM.safeZoneToggle?.checked) {
                     container.querySelector('.safe-mask').style.display = 'block';
                 }
+
+                saveState();
             };
             reader.readAsDataURL(file);
         }
@@ -264,10 +425,58 @@ document.addEventListener('DOMContentLoaded', () => {
         return canvas.toDataURL('image/jpeg', 0.85);
     }
 
+    // ==================== PDF Helper Functions ====================
+
+    function addHeaderToPDF(doc, caption, tags, margin) {
+        let y = margin;
+
+        if (caption || tags) {
+            if (caption) {
+                doc.setFontSize(16);
+                doc.text(caption, margin, y);
+                y += 18;
+            }
+            if (tags) {
+                doc.setFontSize(12);
+                doc.text(tags, margin, y);
+                y += 14;
+            }
+            y += 10;
+        }
+
+        return y;
+    }
+
+    function addImageToPDF(doc, img, x, y, index, thumbnail) {
+        const cropped = cropTo4x5(img);
+        doc.addImage(cropped, 'JPEG', x, y, thumbnail.width, thumbnail.height);
+
+        // Number badge
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        const numberText = (index + 1).toString();
+        const textWidth = doc.getTextWidth(numberText);
+        const padding = 3;
+        doc.setFillColor(255, 255, 255);
+        doc.rect(x + 4, y + thumbnail.height - 14, textWidth + padding * 2, 10, 'F');
+        doc.text(numberText, x + 4 + padding, y + thumbnail.height - 6);
+    }
+
+    function addFilenameToPDF(doc, filename, x, y, thumbnailWidth) {
+        doc.setFontSize(8);
+        doc.text(filename || '', x + thumbnailWidth / 2, y + 10, { align: 'center' });
+    }
+
     // ==================== Export Functions ====================
 
     function exportFilenameList() {
         const containers = getImageContainers();
+
+        if (containers.length === 0) {
+            showMessage('Please add some images first!');
+            return;
+        }
+
         const filenames = Array.from(containers).map(c => c.dataset.filename);
         const blob = new Blob([filenames.join('\n')], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
@@ -289,75 +498,56 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const { doc, width: pageWidth, height: pageHeight } = createPDFDocument();
-        const { margin, spacing, textGap, grid, thumbnail } = CONFIG.PDF;
+        setButtonLoading(DOM.exportMoodboardBtn, true, 'Generating PDF...');
 
-        const totalWidth = (grid.columns * thumbnail.width) + ((grid.columns - 1) * spacing);
-        const startX = (pageWidth - totalWidth) / 2;
+        try {
+            // Use setTimeout to allow UI to update before heavy processing
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-        let y = margin;
+            const { doc, width: pageWidth, height: pageHeight } = createPDFDocument();
+            const { margin, spacing, textGap, grid, thumbnail } = CONFIG.PDF;
 
-        // Add caption and tags to first page
-        if (caption || tags) {
-            if (caption) {
-                doc.setFontSize(16);
-                doc.text(caption, margin, y);
-                y += 18;
-            }
-            if (tags) {
-                doc.setFontSize(12);
-                doc.text(tags, margin, y);
-                y += 14;
-            }
-            y += 10;
-        }
+            const totalWidth = (grid.columns * thumbnail.width) + ((grid.columns - 1) * spacing);
+            const startX = (pageWidth - totalWidth) / 2;
 
-        const startYAdjusted = y;
-        let x = startX;
+            const startYAdjusted = addHeaderToPDF(doc, caption, tags, margin);
+            let y = startYAdjusted;
+            let x = startX;
 
-        for (let i = 0; i < containers.length; i++) {
-            const img = containers[i].querySelector('img');
-            const cropped = cropTo4x5(img);
+            for (let i = 0; i < containers.length; i++) {
+                const img = containers[i].querySelector('img');
 
-            try {
-                doc.addImage(cropped, 'JPEG', x, y, thumbnail.width, thumbnail.height);
+                try {
+                    addImageToPDF(doc, img, x, y, i, thumbnail);
+                    addFilenameToPDF(doc, containers[i].dataset.filename, x, y + thumbnail.height, thumbnail.width);
 
-                // Number badge
-                doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                const numberText = (i + 1).toString();
-                const textWidth = doc.getTextWidth(numberText);
-                const padding = 3;
-                doc.setFillColor(255, 255, 255);
-                doc.rect(x + 4, y + thumbnail.height - 14, textWidth + padding * 2, 10, 'F');
-                doc.text(numberText, x + 4 + padding, y + thumbnail.height - 6);
+                    // Move to next position
+                    if ((i + 1) % grid.columns === 0) {
+                        x = startX;
+                        y += thumbnail.height + spacing + textGap;
 
-                // Filename below image
-                doc.setFontSize(8);
-                const filename = containers[i].dataset.filename || '';
-                doc.text(filename, x + thumbnail.width / 2, y + thumbnail.height + 10, { align: 'center' });
-
-                // Move to next position
-                if ((i + 1) % grid.columns === 0) {
-                    x = startX;
-                    y += thumbnail.height + spacing + textGap;
-
-                    // New page if needed
-                    if (y + thumbnail.height + textGap > pageHeight - margin) {
-                        if (i < containers.length - 1) {
-                            doc.addPage();
-                            y = startYAdjusted;
+                        // New page if needed
+                        if (y + thumbnail.height + textGap > pageHeight - margin) {
+                            if (i < containers.length - 1) {
+                                doc.addPage();
+                                y = startYAdjusted;
+                            }
                         }
+                    } else {
+                        x += thumbnail.width + spacing;
                     }
-                } else {
-                    x += thumbnail.width + spacing;
+                } catch (error) {
+                    console.error(`Error adding image ${i + 1} to PDF:`, error);
                 }
-            } catch (error) {
-                console.error('Error adding image to PDF:', error);
             }
-        }
 
-        doc.save('moodboard.pdf');
+            doc.save('moodboard.pdf');
+        } catch (error) {
+            console.error('Error generating moodboard:', error);
+            showMessage('Error generating PDF. Please try again.');
+        } finally {
+            setButtonLoading(DOM.exportMoodboardBtn, false);
+        }
     }
 
     async function exportMetadata() {
@@ -368,55 +558,66 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const { doc, width: pageWidth, height: pageHeight } = createPDFDocument();
-        const { margin } = CONFIG.PDF;
-        let y = margin;
+        setButtonLoading(DOM.exportMetadataBtn, true, 'Generating PDF...');
 
-        // Title
-        doc.setFontSize(16);
-        doc.text('Image Metadata', margin, y);
-        y += 15;
+        try {
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-        // Caption
-        if (caption) {
-            doc.setFontSize(12);
-            doc.text('Caption:', margin, y);
-            y += 7;
-            doc.setFontSize(10);
-            const captionLines = doc.splitTextToSize(caption, pageWidth - (2 * margin));
-            doc.text(captionLines, margin, y);
-            y += (captionLines.length * 5) + 10;
-        }
+            const { doc, width: pageWidth, height: pageHeight } = createPDFDocument();
+            const { margin } = CONFIG.PDF;
+            let y = margin;
 
-        // Tags
-        if (tags) {
-            doc.setFontSize(12);
-            doc.text('Tags:', margin, y);
-            y += 7;
-            doc.setFontSize(10);
-            const tagLines = doc.splitTextToSize(tags, pageWidth - (2 * margin));
-            doc.text(tagLines, margin, y);
-            y += (tagLines.length * 5) + 10;
-        }
+            // Title
+            doc.setFontSize(16);
+            doc.text('Image Metadata', margin, y);
+            y += 15;
 
-        // Image list
-        doc.setFontSize(12);
-        doc.text('Images:', margin, y);
-        y += 10;
-
-        doc.setFontSize(10);
-        containers.forEach((container, index) => {
-            const filename = container.dataset.filename;
-            doc.text(`${index + 1}. ${filename}`, margin, y);
-            y += 7;
-
-            if (y > pageHeight - margin) {
-                doc.addPage();
-                y = margin;
+            // Caption
+            if (caption) {
+                doc.setFontSize(12);
+                doc.text('Caption:', margin, y);
+                y += 7;
+                doc.setFontSize(10);
+                const captionLines = doc.splitTextToSize(caption, pageWidth - (2 * margin));
+                doc.text(captionLines, margin, y);
+                y += (captionLines.length * 5) + 10;
             }
-        });
 
-        doc.save('carousel_metadata.pdf');
+            // Tags
+            if (tags) {
+                doc.setFontSize(12);
+                doc.text('Tags:', margin, y);
+                y += 7;
+                doc.setFontSize(10);
+                const tagLines = doc.splitTextToSize(tags, pageWidth - (2 * margin));
+                doc.text(tagLines, margin, y);
+                y += (tagLines.length * 5) + 10;
+            }
+
+            // Image list
+            doc.setFontSize(12);
+            doc.text('Images:', margin, y);
+            y += 10;
+
+            doc.setFontSize(10);
+            containers.forEach((container, index) => {
+                const filename = container.dataset.filename;
+                doc.text(`${index + 1}. ${filename}`, margin, y);
+                y += 7;
+
+                if (y > pageHeight - margin) {
+                    doc.addPage();
+                    y = margin;
+                }
+            });
+
+            doc.save('carousel_metadata.pdf');
+        } catch (error) {
+            console.error('Error generating metadata PDF:', error);
+            showMessage('Error generating PDF. Please try again.');
+        } finally {
+            setButtonLoading(DOM.exportMetadataBtn, false);
+        }
     }
 
     // ==================== Event Listener Setup ====================
@@ -426,6 +627,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('dragover', handleDragOver);
     document.addEventListener('drop', handleDrop);
     document.addEventListener('paste', handlePasteImages);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
 
     // Export buttons
     DOM.exportFilenameListBtn?.addEventListener('click', exportFilenameList);
@@ -467,7 +671,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ghostClass: 'sortable-ghost',
         onEnd: () => {
             updateImageCounters();
+            saveState();
             console.log('Images reordered');
         }
     });
+
+    // Setup auto-save and restore state
+    setupAutoSave();
+    restoreState();
 });
